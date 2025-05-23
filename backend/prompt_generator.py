@@ -3,13 +3,15 @@ from typing import List, Optional
 import numpy as np
 import os
 from dotenv import load_dotenv
+import logging
 
 # Load environment variables from .env file
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 class PromptGenerator:
-    def __init__(self, openai_client: OpenAI):
-        self.openai_client = openai_client
+    def __init__(self):
+        self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
         self.base_system_message_template = """You are a professional image prompt generation expert. Your tasks are:
         1. Generate {num_prompts} different detailed and vivid image prompts based on user's brief description
@@ -50,12 +52,35 @@ class PromptGenerator:
                 temperature=0.8,
                 max_tokens=2000
             )
-            
             # Parse response and return prompt list
             generated_text = response.choices[0].message.content
             prompts = [prompt.strip() for prompt in generated_text.split('\n') if prompt.strip()]
+            logger.info(f'generating Prompts: {prompts}')
             return prompts[:num_prompts]
             
         except Exception as e:
             print(f"Error occurred while generating prompts: {str(e)}")
             return []
+
+if __name__ == "__main__":
+    # Initialize generator
+    generator = PromptGenerator()
+    
+    # Example previous prompts for in-context learning
+    # previous_prompts = [
+    #     "A majestic lion in the savannah at sunset.",
+    #     "A futuristic city skyline with flying cars."
+    # ]
+    # additional_context = "Previous prompts:\n" + "\n".join(previous_prompts) + \
+    #     "\nPlease refer to the style and elements of these previous prompts for in-context learning. Ensure the new prompts are creative."
+
+    # Generate prompts
+    user_input = "A cute cat"
+    prompts = generator.generate_prompts(
+        user_description=user_input,
+        # additional_context=additional_context
+    )
+    
+    # Print results
+    for i, prompt in enumerate(prompts, 1):
+        print(f"Prompt {i}: {prompt}") 

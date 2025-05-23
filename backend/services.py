@@ -16,8 +16,7 @@ def create_10_prompts(user_description: str = "Generate a creative and visually 
     """
     generator = PromptGenerator(current_app.openai_client)
     prompts = generator.generate_prompts(
-        user_description=user_description,
-        num_prompts=2
+        user_description=user_description
     )
-    logging.info(f'Prompts: {prompts}')
+    logger.info(f'Prompts: {prompts}')
     return prompts
