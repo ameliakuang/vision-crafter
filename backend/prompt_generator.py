@@ -10,8 +10,8 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 class PromptGenerator:
-    def __init__(self):
-        self.openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+    def __init__(self, openai_client):
+        self.openai_client = openai_client
 
         self.base_system_message_template = """You are a professional image prompt generation expert. Your tasks are:
         1. Generate {num_prompts} different detailed and vivid image prompts based on user's brief description
@@ -63,24 +63,30 @@ class PromptGenerator:
             return []
 
 if __name__ == "__main__":
-    # Initialize generator
-    generator = PromptGenerator()
+    from flask import Flask
+    import os
+    from dotenv import load_dotenv
     
-    # Example previous prompts for in-context learning
-    # previous_prompts = [
-    #     "A majestic lion in the savannah at sunset.",
-    #     "A futuristic city skyline with flying cars."
-    # ]
-    # additional_context = "Previous prompts:\n" + "\n".join(previous_prompts) + \
-    #     "\nPlease refer to the style and elements of these previous prompts for in-context learning. Ensure the new prompts are creative."
-
-    # Generate prompts
-    user_input = "A cute cat"
-    prompts = generator.generate_prompts(
-        user_description=user_input,
-        # additional_context=additional_context
-    )
+    # 加载环境变量
+    load_dotenv()
     
-    # Print results
-    for i, prompt in enumerate(prompts, 1):
-        print(f"Prompt {i}: {prompt}") 
+    # 创建测试应用
+    app = Flask(__name__)
+    app.openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+    
+    # 在应用上下文中运行
+    with app.app_context():
+        # 初始化 generator
+        generator = PromptGenerator(app.openai_client)
+        
+        # 测试用例
+        user_input = "一只可爱的猫咪"
+        prompts = generator.generate_prompts(
+            user_description=user_input,
+            num_prompts=2
+        )
+        
+        # 打印结果
+        print("\n生成的提示词：")
+        for i, prompt in enumerate(prompts, 1):
+            print(f"{i}. {prompt}") 
